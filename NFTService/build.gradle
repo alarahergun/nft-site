@@ -1,0 +1,57 @@
+plugins {
+    id 'org.springframework.boot' version '2.6.7'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'java'
+    id 'application'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+targetCompatibility = 11
+mainClassName = 'DriveQuickstart'
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+        runtimeOnly 'org.postgresql:postgresql'
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+        implementation 'org.springframework.boot:spring-boot-starter-validation'
+        compileOnly 'org.projectlombok:lombok'
+        implementation 'org.springframework.data:spring-data-redis'
+        implementation 'redis.clients:jedis'
+
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter'
+        implementation 'org.apache.commons:commons-lang3:3.12.0'
+
+        implementation 'org.springframework.cloud:spring-cloud-commons'
+        implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+        implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+
+        implementation 'com.google.api-client:google-api-client:1.33.0'
+        implementation 'com.google.oauth-client:google-oauth-client-jetty:1.32.1'
+        implementation 'com.google.apis:google-api-services-drive:v3-rev20211107-1.32.1'
+
+        annotationProcessor 'org.projectlombok:lombok'
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    }
+
+
+dependencyManagement{
+    imports{
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:2021.0.0"
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
