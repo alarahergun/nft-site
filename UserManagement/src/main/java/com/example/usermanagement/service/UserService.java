@@ -1,7 +1,8 @@
 package com.example.usermanagement.service;
 
-import com.example.usermanagement.domain.NFT;
-import com.example.usermanagement.domain.User;
+import com.example.usermanagement.controller.dto.CreateUserDto;
+import com.example.usermanagement.controller.dto.UpdateUserInfoDto;
+import com.example.usermanagement.entity.User;
 import com.example.usermanagement.exception.BadRequestException;
 import com.example.usermanagement.exception.Error;
 import com.example.usermanagement.repository.UserRepository;
@@ -28,14 +29,26 @@ public class UserService {
                         Error.USER_NOT_FOUND.getErrorMessage()));
     }
 
-    public User updateUserInfo(User user) {
-        User userToUpdate = findUserByID(user.getId());
-        userToUpdate.setEmail(user.getEmail());
-        userToUpdate.setMsisdn(user.getMsisdn());
-        userToUpdate.setName(user.getName());
-        userToUpdate.setSurname(user.getSurname());
+    public User updateUserInfo(UpdateUserInfoDto updateUserInfoDto) {
+        User userToUpdate = findUserByID(updateUserInfoDto.getId());
+        userToUpdate.setEmail(updateUserInfoDto.getEmail());
+        userToUpdate.setMsisdn(updateUserInfoDto.getMsisdn());
+        userToUpdate.setName(updateUserInfoDto.getName());
+        userToUpdate.setSurname(updateUserInfoDto.getSurname());
 
-        log.info("User with id {} has been updated.", user.getId());
-        return user;
+        log.info("User with id {} has been updated.", updateUserInfoDto.getId());
+        return userToUpdate;
+    }
+
+    public User addNewUser(CreateUserDto dto) {
+        User user = userRepository.findByEmailOrMsisdn(dto.getEmail(), dto.getMsisdn());
+        if (user != null) {
+            throw new BadRequestException(Error.USER_ALREADY_EXISTS.getErrorCode(),
+                    Error.USER_ALREADY_EXISTS.getErrorMessage());
+        }
+
+        return userRepository.save(User.builder().name(dto.getName())
+                .surname(dto.getSurname()).email(dto.getEmail())
+                .msisdn(dto.getMsisdn()).build());
     }
 }

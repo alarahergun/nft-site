@@ -1,6 +1,8 @@
 package com.example.usermanagement.controller;
 
-import com.example.usermanagement.domain.User;
+import com.example.usermanagement.controller.dto.CreateUserDto;
+import com.example.usermanagement.controller.dto.UpdateUserInfoDto;
+import com.example.usermanagement.entity.User;
 import com.example.usermanagement.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -28,21 +30,17 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<User> getUserByUserId(@PathVariable long userId) {
+    public ResponseEntity<User> getUserById(@PathVariable long userId) {
         return ResponseEntity.ok(userService.findUserByID(userId));
     }
 
-    @PutMapping("/updateUserInfo")
-    public ResponseEntity<User> updateUserInfo(@RequestBody @Valid User user) {
-        return ResponseEntity.ok(userService.updateUserInfo(user));
+    @PutMapping("/update-user-info")
+    public ResponseEntity<User> updateUserInfo(@RequestBody @Valid UpdateUserInfoDto updateUserInfoDto) {
+        return ResponseEntity.ok(userService.updateUserInfo(updateUserInfoDto));
     }
 
-    @PostMapping("/mint-nft")
-    public void mintNFT() {
-        return;
+    @PostMapping("/new-user")
+    public ResponseEntity<User> addNewUser(@RequestBody @Valid CreateUserDto createUserDto) {
+        return ResponseEntity.ok(userService.addNewUser(createUserDto));
     }
-
-
-
-
 }
