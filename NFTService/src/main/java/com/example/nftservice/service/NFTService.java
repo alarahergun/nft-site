@@ -80,7 +80,7 @@ public class NFTService {
                 .primarySaleHappened(false)
                 .build());
 
-        redisTemplateForMetadata.opsForValue().set(String.valueOf(nft.getId()), nftMetadata);
+        saveNFTMetadata(nft.getId(), nftMetadata);
         return nft;
     }
 
@@ -91,14 +91,13 @@ public class NFTService {
             throw new BadRequestException(Error.NFT_NOT_FOUND.getErrorCode(), Error.NFT_NOT_FOUND.getErrorMessage());
         }
 
-        if (nft.get().getPrimarySaleHappened() || Objects.requireNonNull(
-                redisTemplateForMetadata.opsForValue().get(String.valueOf(nftId))).getToken() != null) {
+        if (nft.get().getPrimarySaleHappened() || getNFTMetadata(nftId).getToken() != null) {
             throw new BadRequestException(Error.NFT_ALREADY_MINTED.getErrorCode(),
                     Error.NFT_ALREADY_MINTED.getErrorMessage());
         }
 
         if (Boolean.FALSE.equals(redisTemplate.opsForHash().hasKey("nft-upload", String.valueOf(nftId))) ||
-                ObjectUtils.isEmpty(redisTemplateForMetadata.opsForValue().get(String.valueOf(nftId)).getImageUrl())) {
+                ObjectUtils.isEmpty(getNFTMetadata(nftId).getImageUrl())) {
             throw new BadRequestException(Error.MISSING_CONTENT.getErrorCode(),
                     Error.MISSING_CONTENT.getErrorMessage());
         }
@@ -113,10 +112,10 @@ public class NFTService {
                 .build());
 
         // examplary token is created and assigned
-        NFTMetadata nftMetadata = redisTemplateForMetadata.opsForValue().get(String.valueOf(nftId));
+        NFTMetadata nftMetadata = getNFTMetadata(nftId);
         String token = UUID.randomUUID().toString().replace("-", "");
         nftMetadata.setToken(token);
-        redisTemplateForMetadata.opsForValue().set(String.valueOf(nftId), nftMetadata);
+        saveNFTMetadata(nftId, nftMetadata);
 
         return MintResource.builder()
                 .nft(nft.get())
@@ -150,9 +149,9 @@ public class NFTService {
             redisTemplate.opsForHash().put("nft-upload", String.valueOf(nftId), file.getId());
 
             //updating imageUrl in metadata
-            NFTMetadata nftMetadata = redisTemplateForMetadata.opsForValue().get(String.valueOf(nft.getId()));
+            NFTMetadata nftMetadata = getNFTMetadata(nftId);
             nftMetadata.setImageUrl(file.getWebViewLink());
-            redisTemplateForMetadata.opsForValue().set(String.valueOf(nft.getId()), nftMetadata);
+            saveNFTMetadata(nftId, nftMetadata);
         } catch (Exception e) {
             throw new BadRequestException(Error.GOOGLE_DRIVE_ERROR.getErrorCode(),
                     Error.GOOGLE_DRIVE_ERROR.getErrorMessage());
@@ -164,9 +163,9 @@ public class NFTService {
         final User user = userManagementAccessor.getUserById(userId);
 
         //updating owner info
-        NFTMetadata nftMetadata = redisTemplateForMetadata.opsForValue().get(String.valueOf(nft.getId()));
+        NFTMetadata nftMetadata = getNFTMetadata(nftId);
         nftMetadata.setOwnerId(user.getId());
-        redisTemplateForMetadata.opsForValue().set(String.valueOf(nft.getId()), nftMetadata);
+        saveNFTMetadata(nft.getId(), nftMetadata);
 
         return nftTransactionRepository.save(NFTTransaction.builder()
                 .nftId(nftId)
@@ -201,7 +200,24 @@ public class NFTService {
         return nftTransaction.get();
     }
 
-    public NFTTransaction addNFTTransaction(NFTTransaction nftTransaction) {
+    public NFTTransaction postSellOperations(NFTTransaction nftTransaction, long ownerId) {
+
+        NFTMetadata nftMetadata = getNFTMetadata(nftTransaction.getNftId());
+        nftMetadata.setOwnerId(ownerId);
         return nftTransactionRepository.save(nftTransaction);
+    }
+
+    public NFTMetadata getNFTMetadata(long nftId) {
+        NFTMetadata nftMetadata = redisTemplateForMetadata.opsForValue().get(String.valueOf(nftId));
+
+        if(nftMetadata == null) {
+            throw new BadRequestException(Error.NFT_METADATA_NOT_FOUND.getErrorCode(), Error.NFT_METADATA_NOT_FOUND.getErrorMessage());
+        }
+
+        return nftMetadata;
+    }
+
+    public void saveNFTMetadata(long nftId, NFTMetadata nftMetadata) {
+        redisTemplateForMetadata.opsForValue().set(String.valueOf(nftId), nftMetadata);
     }
 }

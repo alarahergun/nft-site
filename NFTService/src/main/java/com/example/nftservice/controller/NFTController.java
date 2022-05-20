@@ -2,6 +2,7 @@ package com.example.nftservice.controller;
 
 import com.example.nftservice.controller.dto.CreateNFTDto;
 import com.example.nftservice.controller.resource.MintResource;
+import com.example.nftservice.data.NFTMetadata;
 import com.example.nftservice.entity.NFT;
 import com.example.nftservice.entity.NFTTransaction;
 import com.example.nftservice.service.NFTService;
@@ -48,9 +49,9 @@ public class NFTController {
         return ResponseEntity.ok(nftService.findNFTTransactionById(nftTransactionId));
     }
 
-    @PostMapping("/add-transaction")
-    public ResponseEntity<NFTTransaction> addNFTTransaction(@RequestBody NFTTransaction nftTransaction) {
-        return ResponseEntity.ok(nftService.addNFTTransaction(nftTransaction));
+    @PostMapping("/post-sell-operations")
+    public ResponseEntity<NFTTransaction> addNFTTransaction(@RequestBody NFTTransaction nftTransaction, @RequestParam long ownerId) {
+        return ResponseEntity.ok(nftService.postSellOperations(nftTransaction, ownerId));
     }
 
     @PostMapping("/create")
@@ -72,5 +73,10 @@ public class NFTController {
     @PostMapping("/transfer")
     public ResponseEntity<NFTTransaction> transferNFT(@RequestParam long nftId, @RequestParam long userId){
         return ResponseEntity.ok(nftService.transferNFT(nftId, userId));
+    }
+
+    @GetMapping("/nftMetadata")
+    public ResponseEntity<NFTMetadata> getNFTMetadata(@RequestParam long nftId) {
+        return ResponseEntity.ok(nftService.getNFTMetadata(nftId));
     }
 }
