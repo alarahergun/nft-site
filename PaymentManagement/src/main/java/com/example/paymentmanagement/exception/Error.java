@@ -10,6 +10,7 @@ public enum Error {
     NOT_ENOUGH_BALANCE("notEnoughBalance", "You don't have enough balance."),
     CURRENCY_DOESNT_EXIST("currencyDoesntExist", "You can't work with this currency, it is not supported."),
     NOT_ON_SALE("notOnSale", "This NFT is not on sale, please try another one."),
+    NFT_ALREADY_OWNED("nftAlreadyOwned", "This NFT is already owned by you, you can't buy it."),
     WALLET_TRANSACTION_DOESNT_EXIST("walletTransactionDoesntExist", "Wallet transaction doesn't exist in the repository."),
     WALLET_DOESNT_EXIST("walletDoesntExist", "This user doesn't have a wallet with the currency of this payment. Please create one."),
     MESSARI_API_ERROR("messariApiError", "There is an error with Messari Api, please try later."),

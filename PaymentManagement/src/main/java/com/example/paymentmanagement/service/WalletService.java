@@ -1,7 +1,9 @@
 package com.example.paymentmanagement.service;
 
 import com.example.paymentmanagement.accessor.UserManagementAccessor;
+import com.example.paymentmanagement.accessor.resource.NFT;
 import com.example.paymentmanagement.accessor.resource.User;
+import com.example.paymentmanagement.accessor.resource.UserInformation;
 import com.example.paymentmanagement.controller.dto.AddToWalletDto;
 import com.example.paymentmanagement.data.Currency;
 import com.example.paymentmanagement.data.frankfurter.FrankfurterConversionRates;
@@ -87,8 +89,10 @@ public class WalletService {
 
     @SneakyThrows
     public FrankfurterCurrencyList getCurrencies() {
-        ParameterizedTypeReference<HashMap<String, String>> responseType = new ParameterizedTypeReference<>() {};
-        HashMap<String, String> currencies = restTemplate.exchange(new URI(frankfurterUrl + "/currencies"), HttpMethod.GET, null,
+        ParameterizedTypeReference<HashMap<String, String>> responseType = new ParameterizedTypeReference<>() {
+        };
+        HashMap<String, String> currencies = restTemplate.exchange(new URI(frankfurterUrl + "/currencies"),
+                HttpMethod.GET, null,
                 responseType).getBody();
 
         FrankfurterCurrencyList frankfurterCurrencyList = new FrankfurterCurrencyList();
@@ -104,7 +108,8 @@ public class WalletService {
         Map<String, String> params = new HashMap<>();
         params.put("from", Constants.US_DOLLAR);
 
-        return restTemplate.exchange(urlTemplate, HttpMethod.GET, null, FrankfurterConversionRates.class, params).getBody();
+        return restTemplate.exchange(urlTemplate, HttpMethod.GET, null, FrankfurterConversionRates.class, params)
+                .getBody();
     }
 
     @Transactional
@@ -177,5 +182,28 @@ public class WalletService {
         final double localToUsdRate = frankfurterConversionRates.getRates().get(localCurrency);
 
         return wantedAmount * messariInfo.getBtcData().getMessariMarketData().getPriceUsd() * localToUsdRate;
+    }
+
+    @Transactional
+    public void addNFTValueToWallets(List<UserInformation> userInformations, NFT nft) {
+
+        log.info("Sold is made for NFT with id: {} Adding value to creators...", nft.getId());
+
+        for (UserInformation userInformation : userInformations) {
+            Wallet wallet = createOrReturnWallet(userManagementAccessor.getUserById(userInformation.getUserId()),
+                    nft.getCurrency());
+            wallet.setAmount(wallet.getAmount() + nft.getPrice() * (double) userInformation.getShare() / 100);
+            log.info("Payment is made to creator with id {}, share: {}, currency: {}, amount: {}",
+                    userInformation.getUserId(), (double) userInformation.getShare() / 100,
+                    nft.getCurrency().getCurrency(), nft.getPrice() * (double) userInformation.getShare() / 100);
+
+            walletRepository.save(wallet);
+
+            walletTransactionRepository.save(WalletTransaction.builder().walletId(wallet.getId())
+                    .amount(nft.getPrice() * (double) userInformation.getShare() / 100)
+                    .date(Instant.now())
+                    .build());
+        }
+
     }
 }
